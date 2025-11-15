@@ -14,7 +14,7 @@ app.use(cookieParser());
 // CORS FIX
 const allowedOrigins = [
   "http://localhost:5173",
-  // "https://your-frontend-url.vercel.app",
+  "https://e-comm-frontend-taupe.vercel.app/",
 ];
 
 app.use(
