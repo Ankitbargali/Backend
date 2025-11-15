@@ -5,13 +5,15 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const User = require("./Models/user");
 
 dotenv.config();
 const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS FIX
+// -------- CORS FIX --------
 const allowedOrigins = [
   "http://localhost:5173",
   "https://e-comm-frontend-taupe.vercel.app",
@@ -20,45 +22,39 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) callback(null, true);
+      else {
         console.log("❌ CORS Blocked:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type,Authorization",
   })
 );
 
-// MongoDB
+// -------- MONGO --------
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("Mongo connected"))
   .catch((err) => console.error("mongoDB connection error:", err));
 
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
+app.get("/", (req, res) => res.send("API running"));
 
-// LOGIN FIX — add cookie flags
+// -------- LOGIN FIX --------
 app.post("/api/users/login", async (req, res) => {
   const { loginId, password } = req.body;
 
-  const existingUser1 = await user.findOne({
+  const existingUser1 = await User.findOne({
     $or: [{ userName: loginId }, { email: loginId }],
   });
 
-  if (!existingUser1) {
-    return res.status(400).json({ errlogin: "Something went wrong!!" });
-  }
+  if (!existingUser1)
+    return res.status(400).json({ errlogin: "Invalid login credentials!" });
 
   const isMatch = await bcrypt.compare(password, existingUser1.password);
-  if (!isMatch) {
-    return res.status(400).json({ errlogin: "Something went wrong!" });
-  }
+  if (!isMatch)
+    return res.status(400).json({ errlogin: "Invalid login credentials!" });
 
   const token = jwt.sign({ id: existingUser1._id }, process.env.JWT_SECRET);
 
@@ -66,32 +62,20 @@ app.post("/api/users/login", async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    path: "/",
   });
 
-  return res.json("Login Successful");
+  res.json({ message: "Login Successful" });
 });
 
-// Routes
-const productroute = require("./routes/productRouter");
-app.use("/api/products", productroute);
+// -------- ROUTES --------
+app.use("/api/products", require("./routes/productRouter"));
+app.use("/api", require("./routes/userRouter"));
+app.use("/api", require("./routes/cartRouter"));
+app.use("/api", require("./routes/categoryRouter"));
+app.use("/api", require("./routes/wishlistRouter"));
+app.use("/api", require("./routes/orderRouter"));
 
-const userroute = require("./routes/userRouter");
-app.use("/api", userroute);
-
-const cartRoutes = require("./routes/cartRouter");
-app.use("/api", cartRoutes);
-
-const categoryroute = require("./routes/categoryRouter");
-app.use("/api", categoryroute);
-
-const wishlistRoute = require("./routes/wishlistRouter");
-app.use("/api", wishlistRoute);
-
-const orderroute = require("./routes/orderRouter");
-app.use("/api", orderroute);
-
-// PORT FIX
+// -------- SERVER --------
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`server running on port ${port}`);
-});
+app.listen(port, () => console.log(`Server running on ${port}`));
