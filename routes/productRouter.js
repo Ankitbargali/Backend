@@ -2,20 +2,8 @@ const express = require("express");
 const Product = require("../Models/product");
 const router = express.Router();
 
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../cloudinary");
-
-// Cloudinary Storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "ecommerce_products",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  },
-});
-
-const upload = multer({ storage });
+// USE MULTER FROM YOUR multer.js FILE
+const upload = require("../multer");
 
 // Get all products
 router.get("/", async (req, res) => {
@@ -36,9 +24,10 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
       return res.status(400).json({ message: "Missing required fields!!" });
     }
 
-    // CLOUDINARY URLs
+    // CLOUDINARY URLs (file.path)
     const imagePaths = req.files.map((file) => file.path);
 
+    // Parse JSON fields
     const specifications = req.body.specifications
       ? JSON.parse(req.body.specifications)
       : [];
@@ -51,7 +40,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
       brand: brand || "",
       category,
       subcategory: subcategory || "",
-      images: imagePaths, // Cloudinary images
+      images: imagePaths, // Cloudinary URLs
       specifications,
       variants,
     });
