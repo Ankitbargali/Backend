@@ -5,23 +5,16 @@ const dotenv = require("dotenv");
 const productModel = require("./Models/product");
 const user = require("./Models/users");
 const upload = require("./multer");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
 dotenv.config();
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "*",
     credentials: true,
   })
 );
