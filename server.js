@@ -14,7 +14,7 @@ app.use(cookieParser());
 // CORS FIX
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://e-comm-frontend-taupe.vercel.app/",
+  "https://e-comm-frontend-taupe.vercel.app",
 ];
 
 app.use(
@@ -23,10 +23,13 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log("❌ CORS Blocked:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type,Authorization",
   })
 );
 
